@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Orbitron:wght@400..900&display=swap');
+
+:root {
+  /* Colors */
+  --clr-bg: #050505;
+  --clr-surface: #111111;
+  --clr-surface-brighter: #1a1a1a;
+
+  --clr-primary: #ff1f1f;
+  /* Crimson Red */
+  --clr-secondary: #bc13fe;
+  /* Neon Purple */
+  --clr-accent: #00f2ff;
+  /* Electric Blue */
+
+  --clr-text: #ffffff;
+  --clr-text-muted: #a0a0a0;
+  --clr-text-dim: #666666;
+
+  /* Gradients */
+  --grad-main: linear-gradient(135deg, var(--clr-primary), var(--clr-secondary));
+  --grad-surface: linear-gradient(180deg, rgba(255, 31, 31, 0.05) 0%, rgba(188, 19, 254, 0.05) 100%);
+
+  /* Shadows & Glows */
+  --glow-red: 0 0 20px rgba(255, 31, 31, 0.3);
+  --glow-purple: 0 0 20px rgba(188, 19, 254, 0.3);
+  --glow-blue: 0 0 20px rgba(0, 242, 255, 0.3);
+
+  /* Misc */
+  --font-main: 'Inter', sans-serif;
+  --font-display: 'Orbitron', sans-serif;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --glass: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--clr-bg);
+  color: var(--clr-text);
+  font-family: var(--font-main);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+ul {
+  list-style: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* Glassmorphism Utility */
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--clr-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--clr-surface-brighter);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--clr-primary);
+}
+
+/* Sections */
+section {
+  padding: 100px 5%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  section {
+    padding: 60px 20px;
+  }
+}
