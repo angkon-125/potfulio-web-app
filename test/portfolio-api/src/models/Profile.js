@@ -10,31 +10,35 @@ const Profile = sequelize.define('Profile', {
     name: {
         type: DataTypes.STRING,
         allowNull: false,
-        validate: {
-            notEmpty: { msg: 'Please add a name' }
-        }
+        defaultValue: ''
+    },
+    headline: {
+        type: DataTypes.STRING,
+        field: 'title'
     },
     bio: {
         type: DataTypes.TEXT,
         allowNull: false,
-        validate: {
-            notEmpty: { msg: 'Please add a bio' }
-        }
+        defaultValue: ''
     },
-    title: DataTypes.STRING,
+    about: DataTypes.TEXT,
+    avatar: {
+        type: DataTypes.STRING,
+        field: 'image'
+    },
+    email: DataTypes.STRING,
     skills: {
-        type: DataTypes.JSON, // Stores array of strings
+        type: DataTypes.JSON,
         defaultValue: []
     },
     socials: {
-        type: DataTypes.JSON, // Stores object { github, linkedin, ... }
+        type: DataTypes.JSON,
         defaultValue: {}
     },
     experience: {
-        type: DataTypes.JSON, // Stores array of objects
+        type: DataTypes.JSON,
         defaultValue: []
-    },
-    image: DataTypes.STRING
+    }
 });
 
 module.exports = Profile;

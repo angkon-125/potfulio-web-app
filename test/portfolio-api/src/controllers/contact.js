@@ -39,7 +39,8 @@ exports.markMessageRead = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('Message not found', 404));
     }
 
-    await message.update({ read: true });
+    const read = typeof req.body?.read === 'boolean' ? req.body.read : true;
+    await message.update({ read });
 
     res.status(200).json({
         success: true,

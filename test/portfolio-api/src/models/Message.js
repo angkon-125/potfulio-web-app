@@ -22,6 +22,14 @@ const Message = sequelize.define('Message', {
             isEmail: true
         }
     },
+    subject: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: '',
+        validate: {
+            notEmpty: { msg: 'Please add a subject' }
+        }
+    },
     message: {
         type: DataTypes.TEXT,
         allowNull: false,

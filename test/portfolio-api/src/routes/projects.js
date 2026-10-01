@@ -4,12 +4,16 @@ const {
     getProject,
     createProject,
     updateProject,
-    deleteProject
+    deleteProject,
+    uploadProjectImage
 } = require('../controllers/projects');
+const upload = require('../middleware/upload');
 
 const router = express.Router();
 
 const { protect, authorize } = require('../middleware/auth');
+
+router.post('/upload', protect, authorize('admin'), upload.single('image'), uploadProjectImage);
 
 router
     .route('/')

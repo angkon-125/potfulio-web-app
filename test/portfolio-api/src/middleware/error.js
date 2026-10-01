@@ -5,7 +5,7 @@ const errorHandler = (err, req, res, next) => {
     error.message = err.message;
 
     // Log to console for dev
-    console.log(err.stack.red || err.stack);
+    console.log(err.stack);
 
     // Mongoose bad ObjectId
     if (err.name === 'CastError') {
@@ -19,9 +19,16 @@ const errorHandler = (err, req, res, next) => {
         error = new ErrorResponse(message, 400);
     }
 
-    // Mongoose validation error
-    if (err.name === 'ValidationError') {
-        const message = Object.values(err.errors).map(val => val.message);
+    if (err.name === 'MulterError') {
+        const message = err.code === 'LIMIT_FILE_SIZE'
+            ? 'Image must be 5MB or smaller.'
+            : err.message;
+        error = new ErrorResponse(message, 400);
+    }
+
+    if (err.name === 'ValidationError' || err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError') {
+        const details = err.errors ? Object.values(err.errors).map(val => val.message) : [];
+        const message = details.filter(Boolean).join(', ') || err.message;
         error = new ErrorResponse(message, 400);
     }
 

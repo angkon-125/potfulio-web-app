@@ -29,19 +29,21 @@ const Project = sequelize.define('Project', {
     },
     liveLink: {
         type: DataTypes.STRING,
+        allowNull: true,
         validate: {
             isUrl: true
         }
     },
     githubLink: {
         type: DataTypes.STRING,
+        allowNull: true,
         validate: {
             isUrl: true
         }
     },
     image: {
         type: DataTypes.STRING,
-        defaultValue: 'no-photo.jpg'
+        allowNull: true
     },
     featured: {
         type: DataTypes.BOOLEAN,

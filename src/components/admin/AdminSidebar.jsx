@@ -13,6 +13,7 @@ const AdminSidebar = ({ activeTab, onTabChange }) => {
 
     const handleLogout = () => {
         sessionStorage.removeItem('isAdmin');
+        sessionStorage.removeItem('token');
         window.location.href = '/';
     };
 

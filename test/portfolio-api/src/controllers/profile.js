@@ -37,3 +37,29 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
         data: profile
     });
 });
+// @desc    Upload profile image
+// @route   PUT /api/profile/upload
+// @access  Private/Admin
+exports.uploadProfileImage = asyncHandler(async (req, res, next) => {
+    if (!req.file) {
+        return next(new ErrorResponse('Please upload a file', 400));
+    }
+
+    let profile = await Profile.findOne();
+    const imageUrl = `/uploads/${req.file.filename}`;
+
+    if (!profile) {
+        profile = await Profile.create({
+            name: '',
+            bio: '',
+            avatar: imageUrl
+        });
+    } else {
+        await profile.update({ avatar: imageUrl });
+    }
+
+    res.status(200).json({
+        success: true,
+        data: imageUrl
+    });
+});

@@ -41,8 +41,23 @@ exports.getProject = asyncHandler(async (req, res, next) => {
 // @desc    Create new project
 // @route   POST /api/projects
 // @access  Private/Admin
+const cleanProjectBody = (body = {}) => {
+    const project = { ...body };
+    ['githubLink', 'liveLink', 'image'].forEach((key) => {
+        if (!(key in project)) return;
+        if (!project[key]) project[key] = null;
+    });
+    if (typeof project.techStack === 'string') {
+        project.techStack = project.techStack.split(',').map((item) => item.trim()).filter(Boolean);
+    }
+    if (project.techStack && !Array.isArray(project.techStack)) {
+        project.techStack = [];
+    }
+    return project;
+};
+
 exports.createProject = asyncHandler(async (req, res, next) => {
-    const project = await Project.create(req.body);
+    const project = await Project.create(cleanProjectBody(req.body));
 
     res.status(201).json({
         success: true,
@@ -62,7 +77,7 @@ exports.updateProject = asyncHandler(async (req, res, next) => {
         );
     }
 
-    await project.update(req.body);
+    await project.update(cleanProjectBody(req.body));
 
     res.status(200).json({
         success: true,
@@ -70,9 +85,17 @@ exports.updateProject = asyncHandler(async (req, res, next) => {
     });
 });
 
-// @desc    Delete project
-// @route   DELETE /api/projects/:id
-// @access  Private/Admin
+exports.uploadProjectImage = asyncHandler(async (req, res, next) => {
+    if (!req.file) {
+        return next(new ErrorResponse('Please upload a file', 400));
+    }
+
+    res.status(200).json({
+        success: true,
+        data: `/uploads/${req.file.filename}`
+    });
+});
+
 exports.deleteProject = asyncHandler(async (req, res, next) => {
     const project = await Project.findByPk(req.params.id);
 

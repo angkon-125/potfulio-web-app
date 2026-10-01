@@ -2,7 +2,7 @@ import React from 'react';
 import ProjectCard from './ProjectCard';
 import { motion } from 'framer-motion';
 
-const Projects = ({ projects }) => {
+const Projects = ({ projects = [] }) => {
     return (
         <section id="projects" className="projects-section">
             <motion.div
@@ -12,11 +12,15 @@ const Projects = ({ projects }) => {
                 viewport={{ once: true }}
             >
                 <h2 className="section-title">Projects</h2>
-                <div className="projects-grid">
-                    {projects.map((project, index) => (
-                        <ProjectCard key={project.id} project={project} index={index} />
-                    ))}
-                </div>
+                {projects.length === 0 ? (
+                    <p style={{ textAlign: 'center', color: 'var(--clr-text-muted)' }}>No projects yet.</p>
+                ) : (
+                    <div className="projects-grid">
+                        {projects.map((project, index) => (
+                            <ProjectCard key={project.id || index} project={project} index={index} />
+                        ))}
+                    </div>
+                )}
             </motion.div>
 
             <style jsx>{`

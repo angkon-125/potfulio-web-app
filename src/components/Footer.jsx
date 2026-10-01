@@ -1,10 +1,10 @@
 import React from 'react';
 
-const Footer = () => {
+const Footer = ({ name }) => {
     return (
         <footer className="footer">
             <div className="footer-content">
-                <p>&copy; {new Date().getFullYear()} DEVHUB. All rights reserved.</p>
+                <p>&copy; {new Date().getFullYear()} {name || 'Portfolio'}. All rights reserved.</p>
                 <p className="footer-credit">Built with React & Passion</p>
             </div>
 

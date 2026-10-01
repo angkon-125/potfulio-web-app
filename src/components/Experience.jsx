@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const Experience = ({ experience }) => {
+const Experience = ({ experience = [] }) => {
     return (
         <section id="experience" className="experience-section">
             <motion.div
@@ -12,9 +12,11 @@ const Experience = ({ experience }) => {
             >
                 <h2 className="section-title">Learning Journey</h2>
                 <div className="timeline">
-                    {experience.map((item, index) => (
+                    {experience.length === 0 ? (
+                        <p className="timeline-desc" style={{ textAlign: 'center' }}>No experience added yet.</p>
+                    ) : experience.map((item, index) => (
                         <motion.div
-                            key={item.id}
+                            key={item.id || index}
                             initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.5, delay: index * 0.1 }}

@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
 const Hero = ({ profile }) => {
+  const [avatarFailed, setAvatarFailed] = useState(false);
+  const avatar = profile?.avatar || '';
+
   return (
     <section id="hero" className="hero-section">
       <div className="hero-bg-glow"></div>
@@ -12,19 +15,26 @@ const Hero = ({ profile }) => {
         transition={{ duration: 0.8 }}
         className="hero-container"
       >
-        <motion.div
-          className="hero-avatar-wrapper"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          <div className="hero-avatar-glow"></div>
-          <img
-            src={profile.avatar}
-            alt={profile.name}
-            className="hero-avatar"
-          />
-        </motion.div>
+        {avatar ? (
+          <motion.div
+            className="hero-avatar-wrapper"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            <div className="hero-avatar-glow"></div>
+            {avatarFailed ? (
+              <div className="hero-avatar hero-avatar-fallback" role="img" aria-label="Profile photo unavailable" />
+            ) : (
+              <img
+                src={avatar}
+                alt={profile.name || 'Profile'}
+                className="hero-avatar"
+                onError={() => setAvatarFailed(true)}
+              />
+            )}
+          </motion.div>
+        ) : null}
 
         <div className="hero-content">
           <motion.span
@@ -42,7 +52,7 @@ const Hero = ({ profile }) => {
           </h1>
 
           <div className="hero-tagline-container">
-            <p className="hero-tagline">{profile.tagline}</p>
+            {profile.headline ? <p className="hero-tagline">{profile.headline}</p> : null}
           </div>
 
           <div className="hero-ctas">
@@ -78,36 +88,49 @@ const Hero = ({ profile }) => {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 30px;
-          max-width: 1000px;
+          gap: 36px;
+          max-width: 1100px;
+          width: 100%;
+          min-width: 0;
+        }
+        .hero-content {
+          min-width: 0;
+          max-width: 640px;
           width: 100%;
         }
         .hero-avatar-wrapper {
           position: relative;
-          width: 180px;
-          height: 180px;
-          margin-bottom: 10px;
+          flex: 0 0 auto;
+          flex-shrink: 0;
+          width: min(72vw, 260px);
+          min-width: min(72vw, 260px);
+          aspect-ratio: 4 / 5;
+          height: auto;
         }
         .hero-avatar {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          border-radius: 50%;
-          border: 4px solid var(--clr-primary);
+          object-position: center center;
+          border-radius: 18px;
+          border: 2px solid rgba(255, 31, 31, 0.75);
           position: relative;
           z-index: 1;
-          background: var(--clr-bg-alt);
+          display: block;
+          background: #141414;
+        }
+        .hero-avatar-fallback {
+          background:
+            linear-gradient(160deg, rgba(255, 31, 31, 0.16), rgba(188, 19, 254, 0.12)),
+            #141414;
         }
         .hero-avatar-glow {
           position: absolute;
-          top: -10px;
-          left: -10px;
-          right: -10px;
-          bottom: -10px;
+          inset: -8px;
           background: var(--grad-main);
-          border-radius: 50%;
-          filter: blur(15px);
-          opacity: 0.4;
+          border-radius: 24px;
+          filter: blur(16px);
+          opacity: 0.35;
           z-index: 0;
         }
         .hero-greeting {
@@ -120,9 +143,11 @@ const Hero = ({ profile }) => {
           margin-bottom: 10px;
         }
         .hero-name {
-          font-size: clamp(3rem, 10vw, 5rem);
+          font-size: clamp(2.1rem, 5vw, 3.6rem);
           margin-bottom: 20px;
-          line-height: 1;
+          line-height: 1.05;
+          max-width: 100%;
+          overflow-wrap: anywhere;
         }
         .hero-name .dot {
           color: var(--clr-primary);
@@ -171,17 +196,34 @@ const Hero = ({ profile }) => {
           border-color: var(--clr-primary);
         }
 
+        @media (min-width: 768px) and (max-width: 991px) {
+          .hero-avatar-wrapper {
+            width: 240px;
+            min-width: 240px;
+          }
+          .hero-name {
+            font-size: clamp(2rem, 4vw, 2.8rem);
+          }
+        }
+
         @media (min-width: 992px) {
           .hero-container {
             flex-direction: row;
             text-align: left;
             align-items: center;
             justify-content: center;
-            gap: 60px;
+            gap: 72px;
           }
           .hero-avatar-wrapper {
-            width: 250px;
-            height: 250px;
+            width: 320px;
+            min-width: 320px;
+          }
+          .hero-content {
+            flex: 1 1 auto;
+          }
+          .hero-tagline {
+            margin-left: 0;
+            margin-right: 0;
           }
           .hero-ctas {
             justify-content: flex-start;

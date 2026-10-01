@@ -1,5 +1,5 @@
 {
-    "server": "127.0.0.1",
+    "server": "DESKTOP-GP2116L",
     "port": 53780,
     "authentication": {
         "type": "default",

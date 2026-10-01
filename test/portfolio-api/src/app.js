@@ -23,7 +23,9 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Security Middleware
-app.use(helmet()); // Set security headers
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
 app.use(cors()); // Enable CORS
 app.use(xss()); // Prevent XSS attacks
 app.use(hpp()); // Prevent HTTP param pollution
@@ -31,7 +33,7 @@ app.use(hpp()); // Prevent HTTP param pollution
 // Rate limiting
 const limiter = rateLimit({
     windowMs: 10 * 60 * 1000, // 10 mins
-    max: 100
+    max: 1000 // Increased for development
 });
 app.use('/api', limiter);
 
@@ -44,12 +46,14 @@ const profile = require('./routes/profile');
 const projects = require('./routes/projects');
 const contact = require('./routes/contact');
 const admin = require('./routes/admin');
+const ai = require('./routes/ai');
 
 app.use('/api/auth', auth);
 app.use('/api/profile', profile);
 app.use('/api/projects', projects);
 app.use('/api/contact', contact);
 app.use('/api/admin', admin);
+app.use('/api/ai', ai);
 
 app.get('/', (req, res) => {
     res.json({ message: 'Welcome to Portfolio API' });

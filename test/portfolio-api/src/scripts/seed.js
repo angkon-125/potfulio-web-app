@@ -22,11 +22,15 @@ const createAdmin = async () => {
         });
 
         const profile = await Profile.create({
-            name: 'Admin User',
-            bio: 'Full Stack Developer',
-            title: 'Software Engineer',
-            skills: ['JavaScript', 'Node.js', 'React'],
-            socials: { github: 'github.com', linkedin: 'linkedin.com' }
+            name: '',
+            bio: '',
+            headline: '',
+            about: '',
+            email: '',
+            skills: [],
+            socials: {},
+            experience: [],
+            avatar: ''
         });
 
         console.log('Admin User Created...'.green.inverse);

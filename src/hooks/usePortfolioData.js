@@ -1,97 +1,229 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
-const INITIAL_DATA = {
-    profile: {
-        name: "Alex Dev",
-        tagline: "Developer | AI Enthusiast | Creative Technologist",
-        bio: "I am a results-driven developer specializing in Frontend, Backend, and AI systems. I focus on building real-world projects like AI assistants, experimental UIs, and system-level tools. My approach balances technical precision with creative problem-solving.",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
-    },
-    skills: [
-        { category: "Frontend", items: ["HTML", "CSS", "JavaScript", "React"] },
-        { category: "Backend", items: ["Node.js", "REST APIs"] },
-        { category: "AI / ML", items: ["AI Assistants", "Voice AI", "RAG Basics"] },
-        { category: "Tools", items: ["Git", "GitHub", "SQL", "VS Code"] },
-    ],
-    projects: [
-        {
-            id: 1,
-            title: "Metal Machine",
-            description: "A high-impact, heavy metal inspired UI project with aggressive aesthetics.",
-            tech: ["React", "CSS", "Framer Motion"],
-            demo: "https://metal-machine.vercel.app/",
-            github: "https://github.com/angkon-125",
-            image: "https://images.unsplash.com/photo-1551033541-2075d603463b?auto=format&fit=crop&w=800&q=80"
-        },
-        {
-            id: 2,
-            title: "Idea Cyan",
-            description: "A creative ideation and brainstorming platform with a sleek, cyan-themed interface.",
-            tech: ["React", "Tailwind", "Firebase"],
-            demo: "https://idea-cyan.vercel.app/",
-            github: "https://github.com/angkon-125",
-            image: "https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=800&q=80"
-        },
-        {
-            id: 3,
-            title: "Weather API App",
-            description: "Real-time weather forecasting application using advanced API integrations.",
-            tech: ["JavaScript", "Weather API", "CSS"],
-            demo: "https://weather-api-six-livid.vercel.app/",
-            github: "https://github.com/angkon-125",
-            image: "https://images.unsplash.com/photo-1504608512844-5a0dc780ed93?auto=format&fit=crop&w=800&q=80"
-        },
-        {
-            id: 4,
-            title: "AI Voice Assistant",
-            description: "A real-time voice recognition and response system powered by Gemini API.",
-            tech: ["React", "Node.js", "AI"],
-            demo: "#",
-            github: "https://github.com/angkon-125",
-            image: "https://images.unsplash.com/photo-1589254065675-d0581bb3327d?auto=format&fit=crop&w=800&q=80"
-        }
-    ],
-    experience: [
-        {
-            id: 1,
-            title: "Self-Driven Learning & Projects",
-            period: "2023 - Present",
-            description: "Building production-ready applications, focusing on full-stack development and AI integration. Developed several open-source tools and experimental UIs."
-        },
-        {
-            id: 2,
-            title: "Freelance Developer",
-            period: "2022 - 2023",
-            description: "Worked with clients to deliver responsive web applications and custom automation scripts using Node.js."
-        }
-    ],
-    contact: {
-        email: "armaanjamaan@gmail.com",
-        github: "https://github.com/angkon-125",
-        linkedin: "https://www.linkedin.com/in/armaan-jamaan-2034762b6/"
-    }
+export const API_SERVER_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+export const API_BASE_URL = API_SERVER_URL ? `${API_SERVER_URL}/api` : '';
+
+const emptyProfile = {
+    name: '',
+    headline: '',
+    bio: '',
+    about: '',
+    avatar: '',
+    email: '',
+    socials: {},
+    skills: [],
+    experience: []
 };
 
+export const assetUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')) return url;
+    if (!API_SERVER_URL) return '';
+    return `${API_SERVER_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
+export const toStoredAsset = (url) => {
+    if (!url || url.startsWith('blob:') || url.startsWith('data:')) return '';
+    if (API_SERVER_URL && url.startsWith(API_SERVER_URL)) {
+        return url.slice(API_SERVER_URL.length) || '';
+    }
+    return url;
+};
+
+const asArray = (value) => (Array.isArray(value) ? value : []);
+
+export const normalizeProfile = (raw = {}) => ({
+    name: raw.name || '',
+    headline: raw.headline || raw.title || '',
+    bio: raw.bio || '',
+    about: raw.about || '',
+    avatar: assetUrl(raw.avatar || raw.image || ''),
+    email: raw.email || '',
+    socials: raw.socials && typeof raw.socials === 'object' ? raw.socials : {},
+    skills: asArray(raw.skills),
+    experience: asArray(raw.experience)
+});
+
+export const normalizeProject = (raw = {}) => {
+    let techStack = raw.techStack;
+    if (typeof techStack === 'string') {
+        try {
+            techStack = JSON.parse(techStack);
+        } catch {
+            techStack = techStack.split(',').map((item) => item.trim()).filter(Boolean);
+        }
+    }
+    return {
+        ...raw,
+        title: raw.title || '',
+        description: raw.description || '',
+        image: assetUrl(raw.image || ''),
+        techStack: asArray(techStack),
+        githubLink: raw.githubLink || '',
+        liveLink: raw.liveLink || ''
+    };
+};
+
+const profilePayload = (profile) => ({
+    name: profile.name || '',
+    headline: profile.headline || '',
+    bio: profile.bio || '',
+    about: profile.about || '',
+    avatar: toStoredAsset(profile.avatar),
+    email: profile.email || '',
+    socials: profile.socials && typeof profile.socials === 'object' ? profile.socials : {},
+    skills: asArray(profile.skills),
+    experience: asArray(profile.experience)
+});
+
 export const usePortfolioData = () => {
-    const [data, setData] = useState(() => {
-        const saved = localStorage.getItem('portfolio_data');
-        return saved ? JSON.parse(saved) : INITIAL_DATA;
-    });
+    const [data, setData] = useState({ profile: emptyProfile, projects: [] });
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    const fetchData = useCallback(async () => {
+        if (!API_BASE_URL) {
+            setError('VITE_API_URL is not set.');
+            setLoading(false);
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const [profileRes, projectsRes] = await Promise.all([
+                fetch(`${API_BASE_URL}/profile/public`),
+                fetch(`${API_BASE_URL}/projects`)
+            ]);
+
+            const profileData = await profileRes.json();
+            const projectsData = await projectsRes.json();
+
+            setData({
+                profile: profileData.success ? normalizeProfile(profileData.data) : emptyProfile,
+                projects: projectsData.success ? asArray(projectsData.data).map(normalizeProject) : []
+            });
+            setError(profileData.success || projectsData.success ? null : 'Could not load portfolio data.');
+        } catch (err) {
+            console.error('Error fetching portfolio data:', err);
+            setError('Failed to connect to API.');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
-        localStorage.setItem('portfolio_data', JSON.stringify(data));
-    }, [data]);
+        fetchData();
+    }, [fetchData]);
 
-    const updateProfile = (profile) => setData(prev => ({ ...prev, profile }));
-    const updateSkills = (skills) => setData(prev => ({ ...prev, skills }));
-    const updateProjects = (projects) => setData(prev => ({ ...prev, projects }));
-    const updateExperience = (experience) => setData(prev => ({ ...prev, experience }));
+    const authHeaders = () => {
+        const token = sessionStorage.getItem('token');
+        return {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        };
+    };
+
+    const updateProfile = async (updatedProfile) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/profile/admin`, {
+                method: 'PUT',
+                headers: authHeaders(),
+                body: JSON.stringify(profilePayload(updatedProfile))
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                setData((prev) => ({
+                    ...prev,
+                    profile: normalizeProfile(result.data)
+                }));
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.error('Error updating profile:', err);
+            return false;
+        }
+    };
+
+    const addProject = async (project) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/projects`, {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify(project)
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                setData((prev) => ({
+                    ...prev,
+                    projects: [normalizeProject(result.data), ...prev.projects]
+                }));
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.error('Error adding project:', err);
+            return false;
+        }
+    };
+
+    const updateProject = async (id, project) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
+                method: 'PUT',
+                headers: authHeaders(),
+                body: JSON.stringify(project)
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                setData((prev) => ({
+                    ...prev,
+                    projects: prev.projects.map((item) => (
+                        item.id === id ? normalizeProject(result.data) : item
+                    ))
+                }));
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.error('Error updating project:', err);
+            return false;
+        }
+    };
+
+    const deleteProject = async (id) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
+                method: 'DELETE',
+                headers: authHeaders()
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                setData((prev) => ({
+                    ...prev,
+                    projects: prev.projects.filter((project) => project.id !== id)
+                }));
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.error('Error deleting project:', err);
+            return false;
+        }
+    };
 
     return {
         data,
+        loading,
+        error,
         updateProfile,
-        updateSkills,
-        updateProjects,
-        updateExperience
+        addProject,
+        updateProject,
+        deleteProject,
+        refresh: fetchData
     };
 };

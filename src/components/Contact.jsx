@@ -1,67 +1,116 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Github, Linkedin, Send } from 'lucide-react';
+import { API_BASE_URL } from '../hooks/usePortfolioData';
 
-const Contact = ({ contact }) => {
-    const [status, setStatus] = useState('');
+const toUrl = (value) => {
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+  return `https://${value.replace(/^\/\//, '')}`;
+};
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        setStatus('Message sent successfully!');
-        setTimeout(() => setStatus(''), 3000);
-    };
+const Contact = ({ profile = {} }) => {
+  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
+  const [status, setStatus] = useState('');
+  const [error, setError] = useState('');
+  const [sending, setSending] = useState(false);
+  const socials = profile.socials || {};
 
-    return (
-        <section id="contact" className="contact-section">
-            <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-            >
-                <h2 className="section-title">Get In Touch</h2>
-                <div className="contact-container">
-                    <div className="contact-info">
-                        <p className="contact-desc">
-                            Have a question or want to work together? Feel free to reach out through the form or my social channels.
-                        </p>
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus('');
+    setError('');
 
-                        <div className="contact-methods">
-                            <a href={`mailto:${contact.email}`} className="method glass">
-                                <Mail size={20} />
-                                <span>{contact.email}</span>
-                            </a>
-                            <a href={`https://${contact.github}`} target="_blank" rel="noopener noreferrer" className="method glass">
-                                <Github size={20} />
-                                <span>GitHub</span>
-                            </a>
-                            <a href={`https://${contact.linkedin}`} target="_blank" rel="noopener noreferrer" className="method glass">
-                                <Linkedin size={20} />
-                                <span>LinkedIn</span>
-                            </a>
-                        </div>
-                    </div>
+    if (!API_BASE_URL) {
+      setError('Contact service is not configured.');
+      return;
+    }
 
-                    <form className="contact-form glass" onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <input type="text" placeholder="Name" required />
-                        </div>
-                        <div className="form-group">
-                            <input type="email" placeholder="Email" required />
-                        </div>
-                        <div className="form-group">
-                            <textarea placeholder="Message" rows="5" required></textarea>
-                        </div>
-                        <button type="submit" className="submit-btn">
-                            <span>Send Message</span>
-                            <Send size={18} />
-                        </button>
-                        {status && <p className="form-status">{status}</p>}
-                    </form>
-                </div>
-            </motion.div>
+    setSending(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        setError(result.error || 'Message could not be sent.');
+        return;
+      }
+      setForm({ name: '', email: '', subject: '', message: '' });
+      setStatus('Message sent successfully.');
+    } catch {
+      setError('Message could not be sent.');
+    } finally {
+      setSending(false);
+    }
+  };
 
-            <style jsx>{`
+  return (
+    <section id="contact" className="contact-section">
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
+        viewport={{ once: true }}
+      >
+        <h2 className="section-title">Get In Touch</h2>
+        <div className="contact-container">
+          <div className="contact-info">
+            <p className="contact-desc">
+              Have a question or want to work together? Feel free to reach out through the form or my social channels.
+            </p>
+
+            <div className="contact-methods">
+              {profile.email ? (
+                <a href={`mailto:${profile.email}`} className="method glass">
+                  <Mail size={20} />
+                  <span>{profile.email}</span>
+                </a>
+              ) : null}
+              {socials.github ? (
+                <a href={toUrl(socials.github)} target="_blank" rel="noopener noreferrer" className="method glass">
+                  <Github size={20} />
+                  <span>GitHub</span>
+                </a>
+              ) : null}
+              {socials.linkedin ? (
+                <a href={toUrl(socials.linkedin)} target="_blank" rel="noopener noreferrer" className="method glass">
+                  <Linkedin size={20} />
+                  <span>LinkedIn</span>
+                </a>
+              ) : null}
+              {!profile.email && !socials.github && !socials.linkedin ? (
+                <p className="contact-desc">No contact links added yet.</p>
+              ) : null}
+            </div>
+          </div>
+
+          <form className="contact-form glass" onSubmit={handleSubmit}>
+            <div className="form-group">
+              <input type="text" placeholder="Name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <input type="email" placeholder="Email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <input type="text" placeholder="Subject" required value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <textarea placeholder="Message" rows="5" required value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })}></textarea>
+            </div>
+            <button type="submit" className="submit-btn" disabled={sending}>
+              <span>{sending ? 'Sending...' : 'Send Message'}</span>
+              <Send size={18} />
+            </button>
+            {status && <p className="form-status">{status}</p>}
+            {error && <p className="form-status" style={{ color: '#ff6b6b' }}>{error}</p>}
+          </form>
+        </div>
+      </motion.div>
+
+      <style jsx>{`
         .section-title {
           text-align: center;
           margin-bottom: 50px;
@@ -151,8 +200,8 @@ const Contact = ({ contact }) => {
           }
         }
       `}</style>
-        </section>
-    );
+    </section>
+  );
 };
 
 export default Contact;

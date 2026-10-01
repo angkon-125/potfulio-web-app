@@ -14,21 +14,14 @@ const About = ({ profile }) => {
                 <h2 className="section-title">About Me</h2>
                 <div className="about-content glass">
                     <div className="about-text">
-                        <p className="bio-highlight">{profile.bio}</p>
-                        <div className="about-stats">
-                            <div className="stat-item">
-                                <span className="stat-label">Focus</span>
-                                <span className="stat-value">Problem Solving</span>
-                            </div>
-                            <div className="stat-item">
-                                <span className="stat-label">Mindset</span>
-                                <span className="stat-value">Growth & Discipline</span>
-                            </div>
-                            <div className="stat-item">
-                                <span className="stat-label">Specialty</span>
-                                <span className="stat-value">Real-World Systems</span>
-                            </div>
-                        </div>
+                        {profile.bio || profile.about ? (
+                            <>
+                                {profile.bio ? <p className="bio-highlight">{profile.bio}</p> : null}
+                                {profile.about ? <p className="bio-highlight">{profile.about}</p> : null}
+                            </>
+                        ) : (
+                            <p className="bio-highlight">No about information yet.</p>
+                        )}
                     </div>
                 </div>
             </motion.div>

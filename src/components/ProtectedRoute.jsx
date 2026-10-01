@@ -2,9 +2,9 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
-    const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+    const token = sessionStorage.getItem('token');
 
-    if (!isAdmin) {
+    if (!token) {
         return <Navigate to="/login" replace />;
     }
 

@@ -1,104 +1,120 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Send, X, Bot, User } from 'lucide-react';
+import { API_BASE_URL } from '../hooks/usePortfolioData';
 
-const AIAssistant = () => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState([
-        { id: 1, type: 'bot', text: "Hi! I'm Alex Bot. Ask me anything about Alex's skills, projects, or experience!" }
-    ]);
-    const [input, setInput] = useState('');
-    const chatEndRef = useRef(null);
+const AIAssistant = ({ profile }) => {
+  const owner = profile?.name?.trim() || '';
+  const greeting = owner
+    ? `Hi! Ask me about ${owner}'s skills, projects, or how to get in touch.`
+    : `Hi! Ask me about the skills, projects, or contact details on this portfolio.`;
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const chatEndRef = useRef(null);
+  const visibleMessages = [{ id: 'greeting', type: 'bot', text: greeting }, ...messages];
 
-    const scrollToBottom = () => {
-        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
+  const scrollToBottom = () => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+  useEffect(() => {
+    scrollToBottom();
+  }, [visibleMessages.length]);
 
-    const handleSend = () => {
-        if (!input.trim()) return;
+  const handleSend = async () => {
+    if (!input.trim()) return;
 
-        const userMsg = { id: Date.now(), type: 'user', text: input };
-        setMessages(prev => [...prev, userMsg]);
-        setInput('');
+    const userMsg = { id: Date.now(), type: 'user', text: input };
+    setMessages(prev => [...prev, userMsg]);
+    setInput('');
 
-        // Mock bot response
-        setTimeout(() => {
-            const botMsg = {
-                id: Date.now() + 1,
-                type: 'bot',
-                text: getBotResponse(input)
-            };
-            setMessages(prev => [...prev, botMsg]);
-        }, 600);
-    };
+    if (!API_BASE_URL) {
+      setMessages((prev) => [...prev, { id: Date.now() + 1, type: 'bot', text: 'The assistant is not configured.' }]);
+      return;
+    }
 
-    const getBotResponse = (query) => {
-        const q = query.toLowerCase();
-        if (q.includes('skill') || q.includes('tech')) return "Alex works with React, Node.js, and AI systems like Gemini and OpenAI.";
-        if (q.includes('project')) return "Some of Alex's projects include an AI Voice Assistant, a Music Player, and a Distortion Pedal Simulator.";
-        if (q.includes('contact') || q.includes('email')) return "You can reach Alex via the contact form below or through LinkedIn/GitHub links in the footer.";
-        if (q.includes('about') || q.includes('who')) return "Alex is a creative technologist focused on building intelligent systems and modern UIs.";
-        return "That's interesting! I'm just a demo bot right now, but Alex can tell you more in person.";
-    };
+    try {
+      const response = await fetch(`${API_BASE_URL}/ai`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: input })
+      });
+      const data = await response.json();
 
-    return (
-        <div className="ai-assistant">
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                        className="chat-window glass"
-                    >
-                        <div className="chat-header">
-                            <div className="header-info">
-                                <Bot size={20} className="bot-icon" />
-                                <span>AI Assistant</span>
-                            </div>
-                            <button onClick={() => setIsOpen(false)} className="close-btn"><X size={18} /></button>
-                        </div>
+      if (data.success) {
+        const botMsg = {
+          id: Date.now() + 1,
+          type: 'bot',
+          text: data.data
+        };
+        setMessages(prev => [...prev, botMsg]);
+      }
+    } catch (err) {
+      console.error('AI Error:', err);
+      const errorMsg = {
+        id: Date.now() + 1,
+        type: 'bot',
+        text: "Sorry, I'm having trouble connecting to my brain right now."
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    }
+  };
 
-                        <div className="chat-messages">
-                            {messages.map((msg) => (
-                                <div key={msg.id} className={`message-wrapper ${msg.type}`}>
-                                    <div className="message-icon">
-                                        {msg.type === 'bot' ? <Bot size={14} /> : <User size={14} />}
-                                    </div>
-                                    <div className="message-bubble">{msg.text}</div>
-                                </div>
-                            ))}
-                            <div ref={chatEndRef} />
-                        </div>
+  return (
+    <div className="ai-assistant">
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            className="chat-window glass"
+          >
+            <div className="chat-header">
+              <div className="header-info">
+                <Bot size={20} className="bot-icon" />
+                <span>AI Assistant</span>
+              </div>
+              <button onClick={() => setIsOpen(false)} className="close-btn"><X size={18} /></button>
+            </div>
 
-                        <div className="chat-input-area">
-                            <input
-                                type="text"
-                                placeholder="Ask something..."
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                            />
-                            <button onClick={handleSend} className="send-btn"><Send size={18} /></button>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            <div className="chat-messages">
+              {visibleMessages.map((msg) => (
+                <div key={msg.id} className={`message-wrapper ${msg.type}`}>
+                  <div className="message-icon">
+                    {msg.type === 'bot' ? <Bot size={14} /> : <User size={14} />}
+                  </div>
+                  <div className="message-bubble">{msg.text}</div>
+                </div>
+              ))}
+              <div ref={chatEndRef} />
+            </div>
 
-            <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setIsOpen(!isOpen)}
-                className="assistant-toggle"
-            >
-                <MessageSquare size={24} />
-            </motion.button>
+            <div className="chat-input-area">
+              <input
+                type="text"
+                placeholder="Ask something..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              />
+              <button onClick={handleSend} className="send-btn"><Send size={18} /></button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-            <style jsx>{`
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => setIsOpen(!isOpen)}
+        className="assistant-toggle"
+      >
+        <MessageSquare size={24} />
+      </motion.button>
+
+      <style jsx>{`
         .ai-assistant {
           position: fixed;
           bottom: 30px;
@@ -220,8 +236,8 @@ const AIAssistant = () => {
           cursor: pointer;
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 };
 
 export default AIAssistant;

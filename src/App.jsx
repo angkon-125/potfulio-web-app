@@ -15,8 +15,7 @@ import AIAssistant from './components/AIAssistant';
 import { usePortfolioData } from './hooks/usePortfolioData';
 import './App.css';
 
-// Layout component to hide Navbar/Footer on admin pages
-const Layout = ({ children }) => {
+const Layout = ({ children, ownerName }) => {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname === '/login';
 
@@ -24,23 +23,23 @@ const Layout = ({ children }) => {
     <>
       {!isAdminRoute && <Navbar />}
       {children}
-      {!isAdminRoute && <Footer />}
+      {!isAdminRoute && <Footer name={ownerName} />}
     </>
   );
 };
 
-const Portfolio = () => {
-  const { data } = usePortfolioData();
+const Portfolio = ({ portfolioData }) => {
+  const { data } = portfolioData;
 
   return (
     <main>
       <Hero profile={data.profile} />
       <About profile={data.profile} />
       <Projects projects={data.projects} />
-      <SkillSection skills={data.skills} />
-      <Experience experience={data.experience} />
-      <Contact contact={data.contact} />
-      <AIAssistant />
+      <SkillSection skills={data.profile.skills} />
+      <Experience experience={data.profile.experience} />
+      <Contact profile={data.profile} />
+      <AIAssistant profile={data.profile} />
     </main>
   );
 };
@@ -50,9 +49,9 @@ function App() {
 
   return (
     <Router>
-      <Layout>
+      <Layout ownerName={portfolioData.data.profile.name}>
         <Routes>
-          <Route path="/" element={<Portfolio />} />
+          <Route path="/" element={<Portfolio portfolioData={portfolioData} />} />
           <Route path="/login" element={<Login />} />
           <Route
             path="/admin"

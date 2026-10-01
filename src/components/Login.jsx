@@ -2,19 +2,41 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Lock } from 'lucide-react';
+import { API_BASE_URL } from '../hooks/usePortfolioData';
 
 const Login = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        if (password === 'admin123') { // Hardcoded demo password
-            sessionStorage.setItem('isAdmin', 'true');
-            navigate('/admin');
-        } else {
-            setError('ACCESS DENIED. INCORRECT CREDENTIALS.');
+        setError('');
+
+        try {
+            if (!API_BASE_URL) {
+                setError('API address is not configured.');
+                return;
+            }
+
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: 'admin', password })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                sessionStorage.setItem('isAdmin', 'true');
+                sessionStorage.setItem('token', data.token);
+                navigate('/admin');
+            } else {
+                setError(data.error || 'ACCESS DENIED. INCORRECT CREDENTIALS.');
+            }
+        } catch (err) {
+            console.error('Login error:', err);
+            setError('CONNECTION ERROR. SERVER MIGHT BE OFFLINE.');
         }
     };
 
@@ -41,7 +63,6 @@ const Login = () => {
                     {error && <p className="error-msg">{error}</p>}
 
                     <button type="submit" className="login-btn">Authenticate</button>
-                    <p className="hint">Demo pass: admin123</p>
                 </form>
             </motion.div>
 
